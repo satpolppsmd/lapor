@@ -50,6 +50,14 @@ textarea{min-height:110px;resize:vertical}
 .kirim{width:100%;background:var(--kuning);color:#1d2433;border:0;border-radius:11px;padding:15px;font-size:1.08rem;font-weight:700;cursor:pointer;box-shadow:0 2px 0 #c49d00}
 .kirim:disabled{opacity:.6;cursor:wait}
 .galat{background:#fdecea;color:var(--merah);border-radius:9px;padding:11px 13px;margin-bottom:12px;font-size:.93rem;display:none}
+.err{display:none;color:var(--merah);font-size:.84rem;margin:6px 0 0;font-weight:500}
+.err.on{display:block}
+input.salah,select.salah,textarea.salah{border-color:var(--merah)!important;background:#fff8f8}
+.kat.salah label{border-color:#e9a5a5}
+#peta.salah{border-color:var(--merah)}
+.setuju.salah{color:var(--merah)}
+.counter{font-size:.8rem;color:var(--abu);text-align:right;margin-top:4px}
+.counter.ok{color:#1b7f3b}
 .hp{position:absolute;left:0;top:0;width:1px;height:1px;opacity:0;pointer-events:none;overflow:hidden}
 .sukses{display:none;text-align:center;padding:26px 18px}
 .sukses .ikon{font-size:52px}
@@ -74,14 +82,14 @@ footer{text-align:center;font-size:.8rem;color:var(--abu);padding:0 12px 30px}
 
   <form id="form" novalidate style="display:none">
     <div class="intro">Isi formulir di bawah ini. Kolom bertanda <span class="wajib">*</span> wajib diisi. Identitas Anda hanya dipakai petugas untuk menindaklanjuti laporan.</div>
-    <div class="galat" id="galat"></div>
-
     <section class="card">
       <h2><span class="no">1</span>Data Pelapor</h2>
       <label for="nama">Nama lengkap <span class="wajib">*</span></label>
       <input type="text" id="nama" maxlength="100" autocomplete="name">
+      <p class="err" id="err-nama"></p>
       <label for="wa">Nomor WhatsApp <span class="wajib">*</span></label>
       <input type="tel" id="wa" maxlength="20" inputmode="tel" placeholder="Contoh: 081234567890">
+      <p class="err" id="err-wa"></p>
       <p class="bantu">Petugas dapat menghubungi nomor ini bila perlu keterangan tambahan.</p>
       <input type="text" name="website" id="website" class="hp" tabindex="-1" autocomplete="off">
     </section>
@@ -90,8 +98,11 @@ footer{text-align:center;font-size:.8rem;color:var(--abu);padding:0 12px 30px}
       <h2><span class="no">2</span>Apa yang ingin dilaporkan?</h2>
       <label>Jenis pelanggaran <span class="wajib">*</span></label>
       <div class="kat" id="kategori"></div>
+      <p class="err" id="err-kategori"></p>
       <label for="uraian">Ceritakan kejadiannya <span class="wajib">*</span></label>
       <textarea id="uraian" maxlength="3000" placeholder="Apa yang terjadi, siapa/usaha apa, sejak kapan, dan hal penting lainnya."></textarea>
+      <div class="counter" id="cnt-uraian">0 karakter (minimal 10)</div>
+      <p class="err" id="err-uraian"></p>
       <label for="waktu">Kapan terjadi? <span class="bantu" style="display:inline">(boleh dikosongkan)</span></label>
       <input type="datetime-local" id="waktu">
     </section>
@@ -100,15 +111,19 @@ footer{text-align:center;font-size:.8rem;color:var(--abu);padding:0 12px 30px}
       <h2><span class="no">3</span>Di mana lokasinya?</h2>
       <label for="kec">Kecamatan <span class="wajib">*</span></label>
       <select id="kec"><option value="">— Pilih kecamatan —</option></select>
+      <p class="err" id="err-kec"></p>
       <label for="desa">Desa/Kelurahan <span class="wajib">*</span></label>
       <select id="desa" disabled><option value="">— Pilih kecamatan dulu —</option></select>
+      <p class="err" id="err-desa"></p>
       <label for="alamat">Alamat atau patokan <span class="wajib">*</span></label>
       <input type="text" id="alamat" maxlength="500" placeholder="Contoh: Jl. Prabu Geusan Ulun, dekat masjid">
+      <p class="err" id="err-alamat"></p>
       <label>Titik lokasi di peta <span class="wajib">*</span></label>
       <button type="button" class="btn2" id="btnGps">📍 Pakai lokasi saya sekarang</button>
       <p class="bantu">Atau ketuk/klik peta untuk menandai lokasi. Penanda bisa digeser.</p>
       <div id="peta"></div>
       <div class="koord" id="koord">Belum ada titik lokasi.</div>
+      <p class="err" id="err-peta"></p>
     </section>
 
     <section class="card">
@@ -117,12 +132,15 @@ footer{text-align:center;font-size:.8rem;color:var(--abu);padding:0 12px 30px}
       <div style="margin-top:10px"><button type="button" class="btn2" id="btnFoto">📷 Tambah foto</button></div>
       <input type="file" id="foto" accept="image/*" multiple style="display:none">
       <div class="foto-grid" id="fotoGrid"></div>
+      <p class="err" id="err-foto"></p>
     </section>
 
     <section class="card">
-      <label class="setuju"><input type="checkbox" id="setuju"> <span>Saya menyatakan laporan ini benar dan bersedia dihubungi petugas untuk tindak lanjut. <span class="wajib">*</span></span></label>
+      <label class="setuju" id="lbl-setuju"><input type="checkbox" id="setuju"> <span>Saya menyatakan laporan ini benar dan bersedia dihubungi petugas untuk tindak lanjut. <span class="wajib">*</span></span></label>
+      <p class="err" id="err-setuju"></p>
     </section>
 
+    <div class="galat" id="galat"></div>
     <button type="submit" class="kirim" id="kirim">Kirim Laporan</button>
   </form>
 
@@ -160,6 +178,7 @@ function init(cfg) {
     l.querySelector('input').addEventListener('change', function () {
       document.querySelectorAll('.kat label').forEach(function (x) { x.classList.remove('on'); });
       l.classList.add('on');
+      cekUlang('kategori');
     });
     k.appendChild(l);
   });
@@ -196,20 +215,21 @@ function setTitik(lat, lng, zoom) {
     marker.on('dragend', function () { var p = marker.getLatLng(); setTitik(p.lat, p.lng); });
   } else marker.setLatLng([lat, lng]);
   if (zoom) map.setView([lat, lng], zoom);
+  setErr('peta', '');
   var el = $('koord'); el.className = 'koord ok';
   el.textContent = '✔ Titik lokasi: ' + lat.toFixed(5) + ', ' + lng.toFixed(5);
 }
 
 $('btnGps').addEventListener('click', function () {
   var b = this;
-  if (!navigator.geolocation) { alertGalat('Perangkat tidak mendukung lokasi otomatis. Silakan ketuk peta.'); return; }
+  if (!navigator.geolocation) { setErr('peta', 'Perangkat tidak mendukung lokasi otomatis. Silakan ketuk peta.'); return; }
   b.disabled = true; b.textContent = 'Mencari lokasi…';
   navigator.geolocation.getCurrentPosition(function (p) {
     setTitik(p.coords.latitude, p.coords.longitude, 17);
     b.disabled = false; b.textContent = '📍 Pakai lokasi saya sekarang';
   }, function () {
     b.disabled = false; b.textContent = '📍 Pakai lokasi saya sekarang';
-    alertGalat('Lokasi tidak bisa diambil (izin lokasi ditolak atau GPS mati). Silakan ketuk peta untuk menandai lokasi.');
+    setErr('peta', 'Lokasi tidak bisa diambil (izin lokasi ditolak atau GPS mati). Silakan ketuk peta untuk menandai lokasi.');
   }, { enableHighAccuracy: true, timeout: 15000 });
 });
 
@@ -218,7 +238,7 @@ $('foto').addEventListener('change', function () {
   var files = Array.prototype.slice.call(this.files);
   this.value = '';
   var sisa = 4 - fotos.length;
-  if (files.length > sisa) alertGalat('Foto maksimal 4. Hanya ' + sisa + ' foto pertama yang ditambahkan.');
+  setErr('foto', files.length > sisa ? 'Foto maksimal 4. Hanya ' + sisa + ' foto pertama yang ditambahkan.' : '');
   files.slice(0, sisa).forEach(function (f) {
     if (!/^image\//.test(f.type)) return;
     kecilkan(f, function (url) { fotos.push(url); tampilFoto(); });
@@ -236,7 +256,7 @@ function kecilkan(file, cb) {
       c.getContext('2d').drawImage(img, 0, 0, w, h);
       cb(c.toDataURL('image/jpeg', 0.8));
     };
-    img.onerror = function () { alertGalat('Salah satu foto tidak bisa dibaca.'); };
+    img.onerror = function () { setErr('foto', 'Salah satu foto tidak bisa dibaca. Coba pilih foto lain.'); };
     img.src = r.result;
   };
   r.readAsDataURL(file);
@@ -255,13 +275,80 @@ function tampilFoto() {
 }
 
 function alertGalat(m) {
-  var g = $('galat'); g.textContent = m; g.style.display = 'block';
-  g.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  var g = $('galat'); g.textContent = m; g.style.display = m ? 'block' : 'none';
+  if (m) g.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
+
+// Elemen yang diberi tanda merah untuk tiap kolom
+var TARGET = { nama: 'nama', wa: 'wa', kategori: 'kategori', uraian: 'uraian', kec: 'kec', desa: 'desa', alamat: 'alamat', peta: 'peta', setuju: 'lbl-setuju', foto: null };
+
+function setErr(id, msg) {
+  var e = $('err-' + id); if (!e) return;
+  e.textContent = msg || '';
+  e.classList.toggle('on', !!msg);
+  if (TARGET[id]) $(TARGET[id]).classList.toggle('salah', !!msg);
+}
+
+function pesanKolom(id) {
+  var v;
+  switch (id) {
+    case 'nama': return $('nama').value.trim().length < 2 ? 'Nama lengkap wajib diisi.' : '';
+    case 'wa':
+      v = $('wa').value.replace(/[^\d]/g, '');
+      if (!v) return 'Nomor WhatsApp wajib diisi.';
+      return /^(0|62)?8\d{7,12}$/.test(v) ? '' : 'Nomor WhatsApp tidak valid. Contoh: 081234567890';
+    case 'kategori': return document.querySelector('input[name=kategori]:checked') ? '' : 'Pilih salah satu jenis pelanggaran.';
+    case 'uraian':
+      v = $('uraian').value.trim().length;
+      if (!v) return 'Ceritakan kejadiannya.';
+      return v < 10 ? 'Uraian masih kurang ' + (10 - v) + ' karakter lagi (minimal 10).' : '';
+    case 'kec': return $('kec').value ? '' : 'Pilih kecamatan.';
+    case 'desa': return $('desa').value ? '' : ($('kec').value ? 'Pilih desa/kelurahan.' : 'Pilih kecamatan dulu, lalu desa/kelurahan.');
+    case 'alamat': return $('alamat').value.trim().length < 3 ? 'Isi alamat atau patokan lokasi.' : '';
+    case 'peta': return titik ? '' : 'Tandai titik lokasi: ketuk peta atau tekan "Pakai lokasi saya sekarang".';
+    case 'setuju': return $('setuju').checked ? '' : 'Centang pernyataan ini untuk mengirim laporan.';
+  }
+  return '';
+}
+
+var URUTAN = ['nama', 'wa', 'kategori', 'uraian', 'kec', 'desa', 'alamat', 'peta', 'setuju'];
+
+// Hapus tanda merah begitu kolom diperbaiki (hanya untuk kolom yang sedang ditandai)
+function cekUlang(id) {
+  var e = $('err-' + id);
+  if (e && e.classList.contains('on')) setErr(id, pesanKolom(id));
+}
+['nama', 'wa', 'uraian', 'alamat'].forEach(function (id) {
+  $(id).addEventListener('input', function () { cekUlang(id); });
+});
+$('kec').addEventListener('change', function () { cekUlang('kec'); cekUlang('desa'); });
+$('desa').addEventListener('change', function () { cekUlang('desa'); });
+$('setuju').addEventListener('change', function () { cekUlang('setuju'); });
+
+// Penghitung karakter uraian
+function hitungUraian() {
+  var n = $('uraian').value.trim().length, c = $('cnt-uraian');
+  c.textContent = n + ' karakter' + (n < 10 ? ' (minimal 10)' : '');
+  c.classList.toggle('ok', n >= 10);
+}
+$('uraian').addEventListener('input', hitungUraian);
 
 $('form').addEventListener('submit', function (e) {
   e.preventDefault();
-  $('galat').style.display = 'none';
+  alertGalat('');
+  var pertama = null;
+  URUTAN.forEach(function (id) {
+    var m = pesanKolom(id);
+    setErr(id, m);
+    if (m && !pertama) pertama = id;
+  });
+  if (pertama) {
+    var el = $(TARGET[pertama]);
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (/^(INPUT|TEXTAREA)$/.test(el.tagName) && el.type !== 'checkbox') setTimeout(function () { el.focus({ preventScroll: true }); }, 400);
+    return;
+  }
+
   var kat = document.querySelector('input[name=kategori]:checked');
   var data = {
     nama: $('nama').value.trim(), wa: $('wa').value.trim(), website: $('website').value,
@@ -269,15 +356,6 @@ $('form').addEventListener('submit', function (e) {
     kecamatan: $('kec').value, desa: $('desa').value, alamat: $('alamat').value.trim(),
     lat: titik ? titik.lat : null, lng: titik ? titik.lng : null, fotos: fotos
   };
-  var wa = data.wa.replace(/[^\d]/g, '');
-  if (data.nama.length < 2) return alertGalat('Nama lengkap wajib diisi.');
-  if (!/^(0|62)?8\d{7,12}$/.test(wa)) return alertGalat('Nomor WhatsApp tidak valid. Contoh: 081234567890');
-  if (!data.kategori) return alertGalat('Pilih jenis pelanggaran.');
-  if (data.uraian.length < 10) return alertGalat('Ceritakan kejadiannya (minimal 10 karakter).');
-  if (!data.kecamatan || !data.desa) return alertGalat('Pilih kecamatan dan desa/kelurahan.');
-  if (data.alamat.length < 3) return alertGalat('Isi alamat atau patokan lokasi.');
-  if (!titik) return alertGalat('Tandai titik lokasi di peta atau pakai lokasi Anda sekarang.');
-  if (!$('setuju').checked) return alertGalat('Centang pernyataan kebenaran laporan.');
 
   var b = $('kirim'); b.disabled = true; b.textContent = 'Mengirim laporan…';
   fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(data) })
