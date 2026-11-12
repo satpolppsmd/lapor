@@ -30,7 +30,7 @@ label{display:block;font-weight:600;font-size:.93rem;margin:12px 0 5px}
 label:first-of-type{margin-top:0}
 .wajib{color:var(--merah)}
 .bantu{font-weight:400;color:var(--abu);font-size:.83rem;margin:4px 0 0}
-input[type=text],input[type=tel],input[type=datetime-local],select,textarea{width:100%;padding:11px 12px;border:1.5px solid var(--garis);border-radius:9px;font-size:1rem;font-family:inherit;background:#fff;color:var(--teks)}
+input[type=text],input[type=tel],input[type=email],input[type=datetime-local],select,textarea{width:100%;padding:11px 12px;border:1.5px solid var(--garis);border-radius:9px;font-size:1rem;font-family:inherit;background:#fff;color:var(--teks)}
 input:focus,select:focus,textarea:focus{outline:none;border-color:var(--biru2);box-shadow:0 0 0 3px rgba(31,75,181,.15)}
 textarea{min-height:110px;resize:vertical}
 .kat{display:grid;gap:8px}
@@ -106,6 +106,10 @@ footer{text-align:center;font-size:.8rem;color:var(--abu);padding:0 12px 30px}
       <input type="tel" id="wa" maxlength="20" inputmode="tel" placeholder="Contoh: 081234567890">
       <p class="err" id="err-wa"></p>
       <p class="bantu">Petugas dapat menghubungi nomor ini bila perlu keterangan tambahan.</p>
+      <label for="email">Email <span style="font-weight:400;color:var(--abu)">(opsional)</span></label>
+      <input type="email" id="email" maxlength="120" autocomplete="email" inputmode="email" placeholder="Contoh: nama@email.com">
+      <p class="err" id="err-email"></p>
+      <p class="bantu">Untuk menerima bukti laporan dan nomor tiket.</p>
       <input type="text" name="website" id="website" class="hp" tabindex="-1" autocomplete="off">
     </section>
 
@@ -164,6 +168,7 @@ footer{text-align:center;font-size:.8rem;color:var(--abu);padding:0 12px 30px}
     <h2 style="justify-content:center">Laporan berhasil dikirim</h2>
     <p>Terima kasih. Simpan nomor laporan Anda:</p>
     <div class="tiket" id="noTiket"></div>
+    <p class="bantu" id="infoEmail" style="display:none;background:#eef7f1;color:#1b5e38;border-radius:8px;padding:9px 11px;margin:0 0 10px"></p>
     <p class="bantu">Petugas Satpol PP Kab. Sumedang akan menindaklanjuti dan dapat menghubungi Anda melalui WhatsApp.</p>
     <p class="bantu">Status aduan dapat dicek kapan saja dengan nomor tiket ini dan 4 angka terakhir nomor WhatsApp yang Anda daftarkan saat melapor.</p>
     <p style="margin-top:14px"><button type="button" class="cekbtn" style="max-width:320px" onclick="keCek()">Cek status aduan ini</button></p>
@@ -311,7 +316,7 @@ function alertGalat(m) {
 }
 
 // Elemen yang diberi tanda merah untuk tiap kolom
-var TARGET = { nama: 'nama', wa: 'wa', kategori: 'kategori', uraian: 'uraian', kec: 'kec', desa: 'desa', alamat: 'alamat', peta: 'peta', setuju: 'lbl-setuju', foto: null };
+var TARGET = { nama: 'nama', wa: 'wa', email: 'email', kategori: 'kategori', uraian: 'uraian', kec: 'kec', desa: 'desa', alamat: 'alamat', peta: 'peta', setuju: 'lbl-setuju', foto: null };
 
 function setErr(id, msg) {
   var e = $('err-' + id); if (!e) return;
@@ -328,6 +333,9 @@ function pesanKolom(id) {
       v = $('wa').value.replace(/[^\d]/g, '');
       if (!v) return 'Nomor WhatsApp wajib diisi.';
       return /^(0|62)?8\d{7,12}$/.test(v) ? '' : 'Nomor WhatsApp tidak valid. Contoh: 081234567890';
+    case 'email':
+      v = $('email').value.trim();
+      return !v || /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v) ? '' : 'Format email belum benar. Contoh: nama@email.com. Kosongkan bila tidak ingin menerima email.';
     case 'kategori': return document.querySelector('input[name=kategori]:checked') ? '' : 'Pilih salah satu jenis pelanggaran.';
     case 'uraian':
       v = $('uraian').value.trim().length;
@@ -342,14 +350,14 @@ function pesanKolom(id) {
   return '';
 }
 
-var URUTAN = ['nama', 'wa', 'kategori', 'uraian', 'kec', 'desa', 'alamat', 'peta', 'setuju'];
+var URUTAN = ['nama', 'wa', 'email', 'kategori', 'uraian', 'kec', 'desa', 'alamat', 'peta', 'setuju'];
 
 // Hapus tanda merah begitu kolom diperbaiki (hanya untuk kolom yang sedang ditandai)
 function cekUlang(id) {
   var e = $('err-' + id);
   if (e && e.classList.contains('on')) setErr(id, pesanKolom(id));
 }
-['nama', 'wa', 'uraian', 'alamat'].forEach(function (id) {
+['nama', 'wa', 'email', 'uraian', 'alamat'].forEach(function (id) {
   $(id).addEventListener('input', function () { cekUlang(id); });
 });
 $('kec').addEventListener('change', function () { cekUlang('kec'); cekUlang('desa'); });
@@ -382,7 +390,7 @@ $('form').addEventListener('submit', function (e) {
 
   var kat = document.querySelector('input[name=kategori]:checked');
   var data = {
-    nama: $('nama').value.trim(), wa: $('wa').value.trim(), website: $('website').value,
+    nama: $('nama').value.trim(), wa: $('wa').value.trim(), email: $('email').value.trim(), website: $('website').value,
     kategori: kat ? kat.value : '', uraian: $('uraian').value.trim(), waktuKejadian: $('waktu').value.replace('T', ' '),
     kecamatan: $('kec').value, desa: $('desa').value, alamat: $('alamat').value.trim(),
     lat: titik ? titik.lat : null, lng: titik ? titik.lng : null, fotos: fotos
@@ -396,6 +404,7 @@ $('form').addEventListener('submit', function (e) {
       $('form').style.display = 'none';
       $('noTiket').textContent = res.tiket;
       $('cTiket').value = res.tiket; $('cekLink').style.display = 'none';
+      if (data.email) { $('infoEmail').textContent = 'Bukti laporan juga dikirim ke ' + data.email + '. Jika tidak ada di Kotak Masuk, periksa folder Spam.'; $('infoEmail').style.display = 'block'; }
       $('sukses').style.display = 'block';
       window.scrollTo(0, 0);
     }).catch(function (err) {
