@@ -65,7 +65,7 @@ input.salah,select.salah,textarea.salah{border-color:var(--merah)!important;back
 footer{text-align:center;font-size:.8rem;color:var(--abu);padding:0 12px 30px}
 .memuat{text-align:center;color:var(--abu);padding:30px}
 .ceklink{display:flex;justify-content:space-between;align-items:center;gap:10px;background:#fff;border-radius:10px;padding:11px 14px;margin-bottom:14px;text-decoration:none;color:var(--biru);font-weight:600;font-size:.93rem;box-shadow:0 1px 3px rgba(18,48,122,.08)}
-.cek .baris{display:grid;grid-template-columns:1fr 130px;gap:10px}
+.cek .baris{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:end}
 .cek .baris label{margin-top:0}
 #cTiket{text-transform:uppercase;letter-spacing:.4px}
 .cekbtn{width:100%;margin-top:12px;background:#1f9d5b;color:#fff;border:0;border-radius:10px;padding:13px;font-size:1rem;font-weight:700;cursor:pointer}
@@ -165,18 +165,18 @@ footer{text-align:center;font-size:.8rem;color:var(--abu);padding:0 12px 30px}
     <p>Terima kasih. Simpan nomor laporan Anda:</p>
     <div class="tiket" id="noTiket"></div>
     <p class="bantu">Petugas Satpol PP Kab. Sumedang akan menindaklanjuti dan dapat menghubungi Anda melalui WhatsApp.</p>
-    <p class="bantu">Status aduan dapat dicek kapan saja dengan nomor tiket ini dan 4 digit terakhir nomor WhatsApp Anda.</p>
+    <p class="bantu">Status aduan dapat dicek kapan saja dengan nomor tiket ini dan 4 angka terakhir nomor WhatsApp yang Anda daftarkan saat melapor.</p>
     <p style="margin-top:14px"><button type="button" class="cekbtn" style="max-width:320px" onclick="keCek()">Cek status aduan ini</button></p>
     <p style="margin-top:18px"><button type="button" class="btn2" onclick="location.reload()">Buat laporan lain</button></p>
   </section>
 
   <section class="card cek" id="cek">
     <h2>🔎 Cek status aduan</h2>
-    <p class="bantu" style="margin:-6px 0 12px">Masukkan nomor tiket dan 4 digit terakhir nomor WhatsApp yang dipakai saat melapor.</p>
+    <p class="bantu" style="margin:-6px 0 12px">Masukkan nomor tiket dan 4 angka terakhir nomor WhatsApp yang Anda daftarkan saat melapor.</p>
     <form id="formCek" novalidate autocomplete="off">
       <div class="baris">
         <label>Nomor tiket<input type="text" id="cTiket" maxlength="24" placeholder="PPUD-202611-XXXXX"></label>
-        <label>4 digit terakhir WA<input type="tel" id="cWa" maxlength="4" inputmode="numeric" placeholder="1234"></label>
+        <label>4 angka terakhir nomor WhatsApp yang Anda daftarkan saat melapor<input type="tel" id="cWa" maxlength="4" inputmode="numeric" placeholder="1234"></label>
       </div>
       <p class="err" id="cGalat"></p>
       <button type="submit" class="cekbtn" id="cBtn">Cek status</button>
@@ -421,7 +421,7 @@ $('formCek').addEventListener('submit', function (e) {
   e.preventDefault();
   var t = $('cTiket').value.trim().toUpperCase(), w = $('cWa').value.trim(), b = $('cBtn'), g = $('cGalat');
   g.classList.remove('on'); $('cHasil').style.display = 'none';
-  if (!t || !/^\d{4}$/.test(w)) { g.textContent = 'Isi nomor tiket dan 4 digit terakhir nomor WhatsApp.'; g.classList.add('on'); return; }
+  if (!t || !/^\d{4}$/.test(w)) { g.textContent = 'Isi nomor tiket dan 4 angka terakhir nomor WhatsApp yang Anda daftarkan saat melapor.'; g.classList.add('on'); return; }
   b.disabled = true; b.textContent = 'Memeriksa…';
   fetch(API_STATUS, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'cekStatus', tiket: t, wa4: w }) })
     .then(function (r) { return r.json(); })
