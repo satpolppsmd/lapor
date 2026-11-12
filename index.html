@@ -64,6 +64,20 @@ input.salah,select.salah,textarea.salah{border-color:var(--merah)!important;back
 .tiket{font-size:1.4rem;font-weight:800;color:var(--biru);background:#fff8d6;border:2px dashed var(--kuning);border-radius:10px;padding:10px;margin:12px 0;letter-spacing:.5px}
 footer{text-align:center;font-size:.8rem;color:var(--abu);padding:0 12px 30px}
 .memuat{text-align:center;color:var(--abu);padding:30px}
+.ceklink{display:flex;justify-content:space-between;align-items:center;gap:10px;background:#fff;border-radius:10px;padding:11px 14px;margin-bottom:14px;text-decoration:none;color:var(--biru);font-weight:600;font-size:.93rem;box-shadow:0 1px 3px rgba(18,48,122,.08)}
+.cek .baris{display:grid;grid-template-columns:1fr 130px;gap:10px}
+.cek .baris label{margin-top:0}
+#cTiket{text-transform:uppercase;letter-spacing:.4px}
+.cekbtn{width:100%;margin-top:12px;background:#1f9d5b;color:#fff;border:0;border-radius:10px;padding:13px;font-size:1rem;font-weight:700;cursor:pointer}
+.cekbtn:disabled{opacity:.6;cursor:wait}
+.cekhasil{display:none;margin-top:14px;border:1.5px solid var(--garis);border-radius:10px;padding:14px}
+.cekhasil .atasH{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;font-weight:700}
+.pil{display:inline-block;padding:3px 11px;border-radius:999px;font-size:.85rem;font-weight:700}
+.p-tunggu{background:#fde7c2;color:#7a4b00}.p-proses{background:#dbe8ff;color:var(--biru)}.p-selesai{background:#d7f2df;color:#13643a}.p-tolak{background:#eceef2;color:#4a5263}
+.cekhasil dl{display:grid;grid-template-columns:140px 1fr;gap:5px 10px;margin:10px 0 0;font-size:.93rem}
+.cekhasil dt{color:var(--abu)}.cekhasil dd{margin:0}
+.cekhasil .pesan{margin-top:10px;font-size:.88rem;color:var(--abu);background:var(--bg);border-radius:8px;padding:9px 11px}
+@media (max-width:480px){.cek .baris{grid-template-columns:1fr}.cekhasil dl{grid-template-columns:1fr;gap:0}.cekhasil dd{margin-bottom:6px}}
 </style>
 </head>
 <body>
@@ -78,6 +92,7 @@ footer{text-align:center;font-size:.8rem;color:var(--abu);padding:0 12px 30px}
 </header>
 
 <main>
+  <a class="ceklink" href="#cek" id="cekLink"><span>Sudah pernah melapor? Cek status aduan Anda</span><span aria-hidden="true">↓</span></a>
   <div id="memuat" class="memuat">Memuat formulir…</div>
 
   <form id="form" novalidate style="display:none">
@@ -150,7 +165,23 @@ footer{text-align:center;font-size:.8rem;color:var(--abu);padding:0 12px 30px}
     <p>Terima kasih. Simpan nomor laporan Anda:</p>
     <div class="tiket" id="noTiket"></div>
     <p class="bantu">Petugas Satpol PP Kab. Sumedang akan menindaklanjuti dan dapat menghubungi Anda melalui WhatsApp.</p>
+    <p class="bantu">Status aduan dapat dicek kapan saja dengan nomor tiket ini dan 4 digit terakhir nomor WhatsApp Anda.</p>
+    <p style="margin-top:14px"><button type="button" class="cekbtn" style="max-width:320px" onclick="keCek()">Cek status aduan ini</button></p>
     <p style="margin-top:18px"><button type="button" class="btn2" onclick="location.reload()">Buat laporan lain</button></p>
+  </section>
+
+  <section class="card cek" id="cek">
+    <h2>🔎 Cek status aduan</h2>
+    <p class="bantu" style="margin:-6px 0 12px">Masukkan nomor tiket dan 4 digit terakhir nomor WhatsApp yang dipakai saat melapor.</p>
+    <form id="formCek" novalidate autocomplete="off">
+      <div class="baris">
+        <label>Nomor tiket<input type="text" id="cTiket" maxlength="24" placeholder="PPUD-202611-XXXXX"></label>
+        <label>4 digit terakhir WA<input type="tel" id="cWa" maxlength="4" inputmode="numeric" placeholder="1234"></label>
+      </div>
+      <p class="err" id="cGalat"></p>
+      <button type="submit" class="cekbtn" id="cBtn">Cek status</button>
+    </form>
+    <div class="cekhasil" id="cHasil"></div>
   </section>
 </main>
 <footer><strong>Satuan Polisi Pamong Praja Kabupaten Sumedang</strong><br>Bidang Penegakan Perundang-undangan Daerah</footer>
@@ -364,6 +395,7 @@ $('form').addEventListener('submit', function (e) {
       if (!res.ok) throw new Error(res.error || 'Laporan gagal dikirim.');
       $('form').style.display = 'none';
       $('noTiket').textContent = res.tiket;
+      $('cTiket').value = res.tiket; $('cekLink').style.display = 'none';
       $('sukses').style.display = 'block';
       window.scrollTo(0, 0);
     }).catch(function (err) {
@@ -373,6 +405,39 @@ $('form').addEventListener('submit', function (e) {
       alertGalat(m);
     });
 });
+
+/* ---- Cek status aduan ---- */
+var API_STATUS = 'https://script.google.com/macros/s/AKfycbyqhP4Fw0-v4nlVlRn4CjpoiQLfL_rB4mW51B24AXBqShoNvH_M-rZ_8siAGlut5vsN/exec';
+var BLN = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+function tglC(s){ if(!s) return '–'; var p=String(s).slice(0,10).split('-'); return p.length<3?s:(+p[2])+' '+BLN[+p[1]-1]+' '+p[0]; }
+function escC(s){ return String(s==null?'':s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function keCek(){ $('cek').scrollIntoView({ behavior: 'smooth' }); setTimeout(function(){ $('cWa').focus(); }, 400); }
+var KLS = { 'Menunggu verifikasi':'p-tunggu', 'Sedang ditindaklanjuti':'p-proses', 'Selesai':'p-selesai', 'Ditolak':'p-tolak' };
+var PSN = { 'Menunggu verifikasi':'Aduan Anda sudah kami terima dan sedang menunggu verifikasi petugas.',
+  'Sedang ditindaklanjuti':'Aduan Anda sudah diverifikasi dan sedang ditindaklanjuti oleh petugas.',
+  'Selesai':'Penanganan aduan Anda sudah selesai. Terima kasih atas laporan Anda.',
+  'Ditolak':'Aduan Anda tidak dapat ditindaklanjuti oleh Bidang PPUD.' };
+$('formCek').addEventListener('submit', function (e) {
+  e.preventDefault();
+  var t = $('cTiket').value.trim().toUpperCase(), w = $('cWa').value.trim(), b = $('cBtn'), g = $('cGalat');
+  g.classList.remove('on'); $('cHasil').style.display = 'none';
+  if (!t || !/^\d{4}$/.test(w)) { g.textContent = 'Isi nomor tiket dan 4 digit terakhir nomor WhatsApp.'; g.classList.add('on'); return; }
+  b.disabled = true; b.textContent = 'Memeriksa…';
+  fetch(API_STATUS, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'cekStatus', tiket: t, wa4: w }) })
+    .then(function (r) { return r.json(); })
+    .catch(function () { throw new Error('Koneksi bermasalah. Periksa internet Anda lalu coba lagi.'); })
+    .then(function (r) {
+      if (!r.ok) throw new Error(r.error || 'Status tidak dapat dicek.');
+      $('cHasil').innerHTML = '<div class="atasH"><span>' + escC(r.tiket) + '</span><span class="pil ' + (KLS[r.status] || '') + '">' + escC(r.status) + '</span></div>' +
+        '<dl><dt>Tanggal masuk</dt><dd>' + escC(tglC(r.masuk)) + '</dd><dt>Kategori</dt><dd>' + escC(r.kategori || '–') + '</dd>' +
+        '<dt>Lokasi</dt><dd>' + escC([r.desa ? 'Desa/Kel. ' + r.desa : '', r.kecamatan ? 'Kec. ' + r.kecamatan : ''].filter(String).join(', ') || '–') + '</dd>' +
+        '<dt>Pembaruan terakhir</dt><dd>' + escC(tglC(r.diperbarui)) + '</dd>' + (r.alasan ? '<dt>Alasan</dt><dd>' + escC(r.alasan) + '</dd>' : '') + '</dl>' +
+        '<div class="pesan">' + escC(PSN[r.status] || '') + '</div>';
+      $('cHasil').style.display = 'block';
+    }).catch(function (err) { g.textContent = err.message; g.classList.add('on'); })
+    .then(function () { b.disabled = false; b.textContent = 'Cek status'; });
+});
+(function () { var m = location.search.match(/[?&]tiket=([^&]+)/); if (m) { $('cTiket').value = decodeURIComponent(m[1]).toUpperCase(); setTimeout(keCek, 600); } })();
 </script>
 </body>
 </html>
