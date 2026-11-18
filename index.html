@@ -46,7 +46,7 @@ textarea{min-height:110px;resize:vertical}
 .cariT{display:flex;gap:6px;margin-top:10px}.cariT input{flex:1;min-width:0}.cariT .btn2{flex:none}
 .hasilT{display:flex;flex-direction:column;gap:5px;margin-top:6px}.hasilT:empty{display:none}
 .hasilT button{text-align:left;border:1.5px solid var(--garis);background:#fff;border-radius:9px;padding:8px 11px;cursor:pointer;font:inherit;color:inherit}
-.hasilT b{display:block}.hasilT small{color:var(--abu);font-size:.82rem}.hasilT p{margin:0;font-size:.85rem;color:var(--abu)}
+.hasilT b{display:block}.hasilT small{display:block;color:var(--abu);font-size:.82rem}.hasilT p{margin:0;font-size:.85rem;color:var(--abu)}
 .koord.ok{color:#1b7f3b;font-weight:600}
 .foto-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px}
 .foto-grid .slot{position:relative;aspect-ratio:1;border-radius:9px;overflow:hidden;background:#f3f5fa;border:1.5px dashed var(--garis)}
@@ -290,30 +290,79 @@ $('btnGps').addEventListener('click', function () {
   }, { enableHighAccuracy: true, timeout: 15000 });
 });
 
-/* Pencarian tempat (Geocoder Google lewat server dashboard); hasil di Sumedang diutamakan. */
+/* Pencarian tempat gabungan untuk titik peta (dipakai form lapor publik & form kasus dashboard; teks ini disalin ke keduanya).
+ * 1) OpenStreetMap lewat Photon (photon.komoot.io, gratis, tanpa key; dipanggil langsung dari browser): memberi NAMA tempat.
+ * 2) Geocoder Google lewat server Apps Script (aksi cariTempat): memberi alamat bila tempat tak ada di OSM.
+ * Hasil di Kab. Sumedang diutamakan; hasil Google <120 m dari hasil lain dan hasil bernama sama <400 m digabung (nama OSM dipakai). */
+var CARI_KOTAK = { s: -7.05, w: 107.68, n: -6.55, e: 108.25 };
+var OSM_JENIS = { mall: 'Pusat perbelanjaan', department_store: 'Pusat perbelanjaan', commercial: 'Kawasan komersial', retail: 'Kawasan komersial',
+  supermarket: 'Supermarket', convenience: 'Minimarket', marketplace: 'Pasar', hospital: 'Rumah sakit', clinic: 'Klinik', doctors: 'Klinik',
+  school: 'Sekolah', kindergarten: 'Sekolah', university: 'Kampus', college: 'Kampus', park: 'Taman', restaurant: 'Rumah makan', fast_food: 'Rumah makan',
+  cafe: 'Kafe', place_of_worship: 'Tempat ibadah', townhall: 'Kantor pemerintah', government: 'Kantor pemerintah', police: 'Kantor polisi',
+  bank: 'Bank', fuel: 'SPBU', hotel: 'Penginapan', guest_house: 'Penginapan', industrial: 'Kawasan industri', works: 'Pabrik', factory: 'Pabrik',
+  village: 'Desa', hamlet: 'Kampung', suburb: 'Kelurahan', bus_stop: 'Halte', bus_station: 'Terminal', attraction: 'Wisata', viewpoint: 'Wisata',
+  waterfall: 'Wisata', peak: 'Gunung', stadium: 'Stadion', sports_centre: 'Olahraga', office: 'Kantor', company: 'Kantor', yes: 'Bangunan' };
+function cariDiSumedang(lat, lng) { return lat >= CARI_KOTAK.s && lat <= CARI_KOTAK.n && lng >= CARI_KOTAK.w && lng <= CARI_KOTAK.e; }
+function cariJarak(a, b) { var k = 111320, dx = (a.lng - b.lng) * k * Math.cos(a.lat * Math.PI / 180), dy = (a.lat - b.lat) * k; return Math.sqrt(dx * dx + dy * dy); }
+function cariOsm(q) {
+  var url = function (kotak) {
+    return 'https://photon.komoot.io/api/?q=' + encodeURIComponent(q) + '&limit=8&lat=-6.85&lon=107.92' +
+      (kotak ? '&bbox=' + [CARI_KOTAK.w, CARI_KOTAK.s, CARI_KOTAK.e, CARI_KOTAK.n].join(',') : '');
+  };
+  var ubah = function (f) {
+    var p = f.properties || {}, c = (f.geometry || {}).coordinates || [];
+    if (!p.name || c.length < 2) return null;
+    var lat = Number(c[1]), lng = Number(c[0]), lihat = {}, bagian = [];
+    [p.street ? p.street + (p.housenumber ? ' No.' + p.housenumber : '') : '', p.locality || p.district, p.city, p.county, p.state].forEach(function (t) {
+      t = String(t || '').trim(); var k = t.toLowerCase(); if (t && !lihat[k] && k !== String(p.name).toLowerCase()) { lihat[k] = 1; bagian.push(t); } });
+    return { nama: String(p.name), alamat: bagian.join(', '), lat: lat, lng: lng, jenis: OSM_JENIS[p.osm_value] || '', sumber: 'OSM', sumedang: cariDiSumedang(lat, lng) };
+  };
+  var ambil = function (kotak) {
+    return fetch(url(kotak)).then(function (r) { return r.ok ? r.json() : { features: [] }; })
+      .then(function (j) { return (j.features || []).map(ubah).filter(Boolean); });
+  };
+  return ambil(true).then(function (h) { return h.length ? h : ambil(false); }).catch(function () { return []; });
+}
+/* google: Promise<{ok,hasil}> dari server. Hasil: Promise<{hasil:[...], galat:''}> */
+function cariGabung(q, google) {
+  var galat = '';
+  var g = google.then(function (j) { return (j.hasil || []).map(function (x) { x.sumber = 'Google'; return x; }); })
+    .catch(function (e) { galat = (e && e.message) || 'Pencarian gagal.'; return []; });
+  return Promise.all([cariOsm(q), g]).then(function (r) {
+    var semua = [];
+    r[0].concat(r[1]).forEach(function (x) {
+      var dobel = semua.filter(function (y) { var d = cariJarak(x, y); return (x.sumber === 'Google' && d < 120) || (y.nama.toLowerCase() === x.nama.toLowerCase() && d < 400); })[0];
+      if (dobel) { if (!dobel.alamat && x.alamat) dobel.alamat = x.alamat; return; }
+      semua.push(x);
+    });
+    var urut = function (x) { return (x.sumedang ? 0 : 4) + (x.jenis === 'Wilayah' ? 3 : x.jenis === 'Halte' ? 2 : x.sumber === 'OSM' ? 0 : 1); };   // tempat bernama dulu, halte & wilayah di bawah
+    semua = semua.map(function (x, i) { x._i = i; return x; }).sort(function (a, b) { return urut(a) - urut(b) || a._i - b._i; })
+      .slice(0, 6).map(function (x) { delete x._i; return x; });
+    return { hasil: semua, galat: semua.length ? '' : galat };
+  });
+}
 function cariTempat() {
   var q = $('cariTempat').value.trim(), b = $('btnCari'), h = $('hasilTempat');
   if (q.length < 3) { setErr('peta', 'Ketik minimal 3 huruf untuk mencari tempat.'); return; }
   b.disabled = true; b.textContent = 'Mencari…'; h.innerHTML = '';
-  fetch(API_STATUS, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'cariTempat', q: q }) })
-    .then(function (r) { return r.json(); })
-    .then(function (j) {
-      if (!j.ok) throw new Error(j.error || 'Pencarian gagal.');
-      if (!j.hasil.length) { var p = document.createElement('p'); p.textContent = 'Tempat tidak ditemukan. Coba kata lain, atau ketuk peta.'; h.appendChild(p); return; }
-      j.hasil.forEach(function (x) {
-        var t = document.createElement('button'); t.type = 'button';
-        var n = document.createElement('b'); n.textContent = x.nama + (x.sumedang ? '' : ' (di luar Sumedang)');
-        var a = document.createElement('small'); a.textContent = x.alamat;
-        t.appendChild(n); t.appendChild(a);
-        t.addEventListener('click', function () {
-          setTitik(x.lat, x.lng, 17); if (!$('alamat').value.trim()) $('alamat').value = x.alamat;
-          h.innerHTML = ''; $('koord').textContent = '✔ Titik lokasi: ' + x.nama + ' (' + x.lat.toFixed(5) + ', ' + x.lng.toFixed(5) + '). Geser penanda bila kurang tepat.';
-        });
-        h.appendChild(t);
+  var google = fetch(API_STATUS, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'cariTempat', q: q }) })
+    .then(function (r) { return r.json(); }).then(function (j) { if (!j.ok) throw new Error(j.error || 'Pencarian gagal.'); return j; });
+  cariGabung(q, google).then(function (j) {
+    if (!j.hasil.length) { var p = document.createElement('p'); p.textContent = j.galat && !/fetch|network/i.test(j.galat) ? j.galat : 'Tempat tidak ditemukan. Coba kata lain, atau ketuk peta.'; h.appendChild(p); return; }
+    j.hasil.forEach(function (x) {
+      var t = document.createElement('button'); t.type = 'button';
+      var n = document.createElement('b'); n.textContent = x.nama; t.appendChild(n);
+      var k = [x.jenis, x.sumedang ? '' : 'di luar Sumedang', x.sumber === 'OSM' ? 'OpenStreetMap' : 'Google'].filter(Boolean).join(' · ');
+      if (x.alamat) { var a = document.createElement('small'); a.textContent = x.alamat; t.appendChild(a); }
+      var j2 = document.createElement('small'); j2.textContent = k; j2.style.color = x.sumedang ? '' : '#9a6700'; j2.style.fontSize = '.75rem'; t.appendChild(j2);
+      t.addEventListener('click', function () {
+        setTitik(x.lat, x.lng, 17);
+        if (!$('alamat').value.trim()) $('alamat').value = x.sumber === 'OSM' ? [x.nama, x.alamat].filter(Boolean).join(', ') : x.alamat;
+        h.innerHTML = ''; $('koord').textContent = '✔ Titik lokasi: ' + x.nama + ' (' + x.lat.toFixed(5) + ', ' + x.lng.toFixed(5) + '). Geser penanda bila kurang tepat.';
       });
-    })
-    .catch(function (e) { var p = document.createElement('p'); p.textContent = e.message && !/fetch|network/i.test(e.message) ? e.message : 'Pencarian gagal. Periksa koneksi, atau ketuk peta.'; h.appendChild(p); })
-    .then(function () { b.disabled = false; b.textContent = '🔎 Cari'; });
+      h.appendChild(t);
+    });
+  }).then(function () { b.disabled = false; b.textContent = '🔎 Cari'; });
 }
 $('btnCari').addEventListener('click', cariTempat);
 $('cariTempat').addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); cariTempat(); } });
