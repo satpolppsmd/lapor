@@ -33,7 +33,7 @@ label{display:block;font-weight:600;font-size:.93rem;margin:12px 0 5px}
 label:first-of-type{margin-top:0}
 .wajib{color:var(--merah)}
 .bantu{font-weight:400;color:var(--abu);font-size:.83rem;margin:4px 0 0}
-input[type=text],input[type=tel],input[type=email],input[type=datetime-local],select,textarea{width:100%;padding:11px 12px;border:1.5px solid var(--garis);border-radius:9px;font-size:1rem;font-family:inherit;background:#fff;color:var(--teks)}
+input[type=text],input[type=search],input[type=tel],input[type=email],input[type=datetime-local],select,textarea{width:100%;padding:11px 12px;border:1.5px solid var(--garis);border-radius:9px;font-size:1rem;font-family:inherit;background:#fff;color:var(--teks)}
 input:focus,select:focus,textarea:focus{outline:none;border-color:var(--biru2);box-shadow:0 0 0 3px rgba(31,75,181,.15)}
 textarea{min-height:110px;resize:vertical}
 .kat{display:grid;gap:8px}
@@ -43,6 +43,10 @@ textarea{min-height:110px;resize:vertical}
 #peta{height:300px;border-radius:10px;border:1.5px solid var(--garis);margin-top:8px;z-index:0}
 .btn2{display:inline-flex;align-items:center;gap:6px;background:#fff;border:1.5px solid var(--biru2);color:var(--biru2);padding:9px 13px;border-radius:9px;font-size:.92rem;font-weight:600;cursor:pointer}
 .koord{font-size:.85rem;color:var(--abu);margin-top:6px}
+.cariT{display:flex;gap:6px;margin-top:10px}.cariT input{flex:1;min-width:0}.cariT .btn2{flex:none}
+.hasilT{display:flex;flex-direction:column;gap:5px;margin-top:6px}.hasilT:empty{display:none}
+.hasilT button{text-align:left;border:1.5px solid var(--garis);background:#fff;border-radius:9px;padding:8px 11px;cursor:pointer;font:inherit;color:inherit}
+.hasilT b{display:block}.hasilT small{color:var(--abu);font-size:.82rem}.hasilT p{margin:0;font-size:.85rem;color:var(--abu)}
 .koord.ok{color:#1b7f3b;font-weight:600}
 .foto-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px}
 .foto-grid .slot{position:relative;aspect-ratio:1;border-radius:9px;overflow:hidden;background:#f3f5fa;border:1.5px dashed var(--garis)}
@@ -144,6 +148,8 @@ footer{text-align:center;font-size:.8rem;color:var(--abu);padding:0 12px 30px}
       <p class="err" id="err-alamat"></p>
       <label>Titik lokasi di peta <span class="wajib">*</span></label>
       <button type="button" class="btn2" id="btnGps">📍 Pakai lokasi saya sekarang</button>
+      <div class="cariT"><input type="search" id="cariTempat" maxlength="120" placeholder="Atau cari tempat, mis. McDonald's Jatinangor" enterkeyhint="search"><button type="button" class="btn2" id="btnCari">🔎 Cari</button></div>
+      <div class="hasilT" id="hasilTempat"></div>
       <p class="bantu">Atau ketuk/klik peta untuk menandai lokasi. Penanda bisa digeser.</p>
       <div id="peta"></div>
       <div class="koord" id="koord">Belum ada titik lokasi.</div>
@@ -283,6 +289,34 @@ $('btnGps').addEventListener('click', function () {
     setErr('peta', 'Lokasi tidak bisa diambil (izin lokasi ditolak atau GPS mati). Silakan ketuk peta untuk menandai lokasi.');
   }, { enableHighAccuracy: true, timeout: 15000 });
 });
+
+/* Pencarian tempat (Geocoder Google lewat server dashboard); hasil di Sumedang diutamakan. */
+function cariTempat() {
+  var q = $('cariTempat').value.trim(), b = $('btnCari'), h = $('hasilTempat');
+  if (q.length < 3) { setErr('peta', 'Ketik minimal 3 huruf untuk mencari tempat.'); return; }
+  b.disabled = true; b.textContent = 'Mencari…'; h.innerHTML = '';
+  fetch(API_STATUS, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'cariTempat', q: q }) })
+    .then(function (r) { return r.json(); })
+    .then(function (j) {
+      if (!j.ok) throw new Error(j.error || 'Pencarian gagal.');
+      if (!j.hasil.length) { var p = document.createElement('p'); p.textContent = 'Tempat tidak ditemukan. Coba kata lain, atau ketuk peta.'; h.appendChild(p); return; }
+      j.hasil.forEach(function (x) {
+        var t = document.createElement('button'); t.type = 'button';
+        var n = document.createElement('b'); n.textContent = x.nama + (x.sumedang ? '' : ' (di luar Sumedang)');
+        var a = document.createElement('small'); a.textContent = x.alamat;
+        t.appendChild(n); t.appendChild(a);
+        t.addEventListener('click', function () {
+          setTitik(x.lat, x.lng, 17); if (!$('alamat').value.trim()) $('alamat').value = x.alamat;
+          h.innerHTML = ''; $('koord').textContent = '✔ Titik lokasi: ' + x.nama + ' (' + x.lat.toFixed(5) + ', ' + x.lng.toFixed(5) + '). Geser penanda bila kurang tepat.';
+        });
+        h.appendChild(t);
+      });
+    })
+    .catch(function (e) { var p = document.createElement('p'); p.textContent = e.message && !/fetch|network/i.test(e.message) ? e.message : 'Pencarian gagal. Periksa koneksi, atau ketuk peta.'; h.appendChild(p); })
+    .then(function () { b.disabled = false; b.textContent = '🔎 Cari'; });
+}
+$('btnCari').addEventListener('click', cariTempat);
+$('cariTempat').addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); cariTempat(); } });
 
 $('btnFoto').addEventListener('click', function () { $('foto').click(); });
 $('foto').addEventListener('change', function () {
