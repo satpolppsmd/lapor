@@ -35,11 +35,11 @@ label:first-of-type{margin-top:0}
 .bantu{font-weight:400;color:var(--abu);font-size:.83rem;margin:4px 0 0}
 input[type=text],input[type=search],input[type=tel],input[type=email],input[type=datetime-local],select,textarea{width:100%;padding:11px 12px;border:1.5px solid var(--garis);border-radius:9px;font-size:1rem;font-family:inherit;background:#fff;color:var(--teks)}
 input:focus,select:focus,textarea:focus{outline:none;border-color:var(--biru2);box-shadow:0 0 0 3px rgba(31,75,181,.15)}
+select{-webkit-appearance:none;appearance:none;min-height:46px;padding-right:38px!important;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%235b6577' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 13px center;text-overflow:ellipsis}
+#blokDesa label{margin-top:12px}
+.infoW{margin:6px 0 0;color:var(--biru2)}
+.infoW.peringatan{color:#8a5a00}
 textarea{min-height:110px;resize:vertical}
-.kat{display:grid;gap:8px}
-.kat label{display:flex;align-items:center;gap:10px;border:1.5px solid var(--garis);border-radius:10px;padding:12px;margin:0;font-weight:500;cursor:pointer}
-.kat input{width:20px;height:20px;accent-color:var(--biru)}
-.kat label.on{border-color:var(--biru2);background:#eef3ff}
 #peta{height:300px;border-radius:10px;border:1.5px solid var(--garis);margin-top:8px;z-index:0}
 .btn2{display:inline-flex;align-items:center;gap:6px;background:#fff;border:1.5px solid var(--biru2);color:var(--biru2);padding:9px 13px;border-radius:9px;font-size:.92rem;font-weight:600;cursor:pointer}
 .koord{font-size:.85rem;color:var(--abu);margin-top:6px}
@@ -59,8 +59,7 @@ textarea{min-height:110px;resize:vertical}
 .galat{background:#fdecea;color:var(--merah);border-radius:9px;padding:11px 13px;margin-bottom:12px;font-size:.93rem;display:none}
 .err{display:none;color:var(--merah);font-size:.84rem;margin:6px 0 0;font-weight:500}
 .err.on{display:block}
-input.salah,select.salah,textarea.salah{border-color:var(--merah)!important;background:#fff8f8}
-.kat.salah label{border-color:#e9a5a5}
+input.salah,select.salah,textarea.salah{border-color:var(--merah)!important;background-color:#fff8f8}
 #peta.salah{border-color:var(--merah)}
 .setuju.salah{color:var(--merah)}
 .counter{font-size:.8rem;color:var(--abu);text-align:right;margin-top:4px}
@@ -124,8 +123,8 @@ footer{text-align:center;font-size:.8rem;color:var(--abu);padding:0 12px 30px}
 
     <section class="card">
       <h2><span class="no">2</span>Apa yang ingin dilaporkan?</h2>
-      <label>Jenis pelanggaran <span class="wajib">*</span></label>
-      <div class="kat" id="kategori"></div>
+      <label for="kategori">Jenis pelanggaran <span class="wajib">*</span></label>
+      <select id="kategori"><option value="">— Pilih jenis pelanggaran —</option></select>
       <p class="err" id="err-kategori"></p>
       <label for="uraian">Ceritakan kejadiannya <span class="wajib">*</span></label>
       <textarea id="uraian" maxlength="3000" placeholder="Apa yang terjadi, siapa/usaha apa, sejak kapan, dan hal penting lainnya."></textarea>
@@ -140,17 +139,20 @@ footer{text-align:center;font-size:.8rem;color:var(--abu);padding:0 12px 30px}
       <label for="kec">Kecamatan <span class="wajib">*</span></label>
       <select id="kec"><option value="">— Pilih kecamatan —</option></select>
       <p class="err" id="err-kec"></p>
+      <div id="blokDesa" hidden>
       <label for="desa">Desa/Kelurahan <span class="wajib">*</span></label>
-      <select id="desa" disabled><option value="">— Pilih kecamatan dulu —</option></select>
+      <select id="desa"><option value="">— Pilih desa/kelurahan —</option></select>
       <p class="err" id="err-desa"></p>
+      </div>
+      <p class="bantu infoW" id="infoWilayah" hidden></p>
       <label for="alamat">Alamat atau patokan <span class="wajib">*</span></label>
       <input type="text" id="alamat" maxlength="500" placeholder="Contoh: Jl. Prabu Geusan Ulun, dekat masjid">
       <p class="err" id="err-alamat"></p>
-      <label>Titik lokasi di peta <span class="wajib">*</span></label>
+      <label>Titik lokasi di peta <span class="bantu" style="display:inline">(boleh dikosongkan)</span></label>
       <button type="button" class="btn2" id="btnGps">📍 Pakai lokasi saya sekarang</button>
       <div class="cariT"><input type="search" id="cariTempat" maxlength="120" placeholder="Atau cari tempat, mis. McDonald's Jatinangor" enterkeyhint="search"><button type="button" class="btn2" id="btnCari">🔎 Cari</button></div>
       <div class="hasilT" id="hasilTempat"></div>
-      <p class="bantu">Atau ketuk/klik peta untuk menandai lokasi. Penanda bisa digeser.</p>
+      <p class="bantu">Atau ketuk/klik peta untuk menandai lokasi. Penanda bisa digeser. Kecamatan dan desa akan diisi otomatis dari titik.</p>
       <div id="peta"></div>
       <div class="koord" id="koord">Belum ada titik lokasi.</div>
       <p class="err" id="err-peta"></p>
@@ -212,7 +214,7 @@ var $ = function (id) { return document.getElementById(id); };
 function formAdaIsi() {
   var f = $('form'); if (!f || f.style.display === 'none') return false;
   if (['nama','wa','email','uraian','waktu','kec','alamat'].some(function (id) { return $(id) && String($(id).value).trim() !== ''; })) return true;
-  return !!(document.querySelector('input[name=kategori]:checked') || fotos.length || titik || $('setuju').checked);
+  return !!($('kategori').value || fotos.length || titik || $('setuju').checked);
 }
 document.addEventListener('click', function (e) {
   var a = e.target.closest && e.target.closest('a.kelogo'); if (!a) return;
@@ -227,18 +229,10 @@ function init(cfg) {
   CFG = cfg;
   $('judul').textContent = cfg.namaKanal;
   var k = $('kategori');
-  cfg.kategori.forEach(function (n, i) {
-    var l = document.createElement('label');
-    l.innerHTML = '<input type="radio" name="kategori" value=""> <span></span>';
-    l.querySelector('input').value = n;
-    l.querySelector('span').textContent = n;
-    l.querySelector('input').addEventListener('change', function () {
-      document.querySelectorAll('.kat label').forEach(function (x) { x.classList.remove('on'); });
-      l.classList.add('on');
-      cekUlang('kategori');
-    });
-    k.appendChild(l);
+  cfg.kategori.slice().sort(function (a, b) { return a.localeCompare(b, 'id', { sensitivity: 'base' }); }).forEach(function (n) {
+    var o = document.createElement('option'); o.value = n; o.textContent = n; k.appendChild(o);
   });
+  k.addEventListener('change', function () { cekUlang('kategori'); });
   Object.keys(cfg.wilayah).sort().forEach(function (n) {
     var o = document.createElement('option'); o.value = n; o.textContent = n; $('kec').appendChild(o);
   });
@@ -247,15 +241,18 @@ function init(cfg) {
   initPeta();
 }
 
-$('kec').addEventListener('change', function () {
+function isiDesa() {
   var d = $('desa'); d.innerHTML = '';
-  var list = CFG.wilayah[this.value] || [];
+  var list = CFG.wilayah[$('kec').value] || [];
   var o0 = document.createElement('option'); o0.value = '';
-  o0.textContent = list.length ? '— Pilih desa/kelurahan —' : '— Pilih kecamatan dulu —';
+  o0.textContent = '— Pilih desa/kelurahan —';
   d.appendChild(o0);
   list.slice().sort().forEach(function (n) { var o = document.createElement('option'); o.value = n; o.textContent = n; d.appendChild(o); });
-  d.disabled = !list.length;
-});
+  $('blokDesa').hidden = !list.length;   // Desa baru muncul setelah kecamatan dipilih
+  if (!list.length) setErr('desa', '');
+}
+$('kec').addEventListener('change', function () { isiDesa(); infoWilayah(''); });
+$('desa').addEventListener('change', function () { infoWilayah(''); });
 
 function initPeta() {
   map = L.map('peta').setView([-6.8575, 107.9196], 11);
@@ -275,6 +272,84 @@ function setTitik(lat, lng, zoom) {
   setErr('peta', '');
   var el = $('koord'); el.className = 'koord ok';
   el.textContent = '✔ Titik lokasi: ' + lat.toFixed(5) + ', ' + lng.toFixed(5);
+  deteksiWilayah(lat, lng);
+}
+
+/* Kecamatan & desa otomatis dari titik peta: nama wilayah dari OpenStreetMap (Photon reverse, langsung dari browser),
+ * bila belum cocok dengan daftar kecamatan/desa, tanya Geocoder Google lewat Apps Script Dashboard (aksi wilayahTitik).
+ * Hanya nama yang persis ada di daftar yang diisikan; pelapor tetap bisa mengubahnya. */
+var seqWil = 0;
+function infoWilayah(teks, peringatan) {
+  var e = $('infoWilayah'); e.textContent = teks || ''; e.hidden = !teks; e.classList.toggle('peringatan', !!peringatan);
+}
+function normWil(t) {
+  return String(t || '').toLowerCase().replace(/^\s*(kecamatan|kec\.?|desa|kelurahan|kel\.?)\s+/, '').replace(/[^a-z0-9]+/g, '');
+}
+function cocokWil(nama) {
+  var N = {}; nama.forEach(function (n, i) { var k = normWil(n); if (k && !N[k]) N[k] = i + 1; });   // urutan = kedekatan
+  var terbaik = null;
+  Object.keys(CFG.wilayah).forEach(function (kec) {
+    var desa = (CFG.wilayah[kec] || []).filter(function (x) { return N[normWil(x)]; }).sort(function (x, y) { return N[normWil(x)] - N[normWil(y)]; })[0] || '';
+    var adaKec = !!N[normWil(kec)];
+    var skor = (adaKec ? 2 : 0) + (desa ? 1 : 0);
+    if (skor >= 2 || (desa && !adaKec)) {
+      var m = { kec: kec, desa: desa, skor: skor, hanyaDesa: !adaKec };
+      if (!terbaik || m.skor > terbaik.skor) terbaik = m;
+      else if (m.skor === terbaik.skor && m.hanyaDesa) terbaik.ganda = true;   // nama desa sama di dua kecamatan: tidak dipakai
+    }
+  });
+  if (terbaik && terbaik.hanyaDesa && terbaik.ganda) return null;
+  return terbaik;
+}
+function ambilJson(url, opsi, ms) {
+  var ac = window.AbortController ? new AbortController() : null;
+  if (ac) { opsi = opsi || {}; opsi.signal = ac.signal; setTimeout(function () { ac.abort(); }, ms); }
+  return fetch(url, opsi).then(function (r) { return r.json(); });
+}
+function namaPhoton(lat, lng) {
+  return ambilJson('https://photon.komoot.io/reverse?lat=' + lat + '&lon=' + lng + '&limit=3', null, 6000).then(function (j) {
+    var out = [], luar = false;
+    (j.features || []).forEach(function (f) {
+      var p = f.properties || {};
+      if (p.county && !/sumedang/i.test(p.county)) luar = true;   // mis. Kabupaten Bandung (kotak perkiraan Sumedang ikut mencakupnya)
+      Object.keys(p).forEach(function (k) { if (typeof p[k] === 'string' && !/^(country|countrycode|postcode|type|osm_key|osm_value|osm_type)$/.test(k)) out.push(p[k]); });
+    });
+    return { nama: out, luar: luar };
+  }).catch(function () { return { nama: [], luar: false }; });
+}
+function namaGoogle(lat, lng) {
+  return ambilJson(API_STATUS, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'wilayahTitik', lat: lat, lng: lng }) }, 12000)
+    .then(function (j) { return { nama: (j && j.nama) || [], luar: !!(j && (j.luar || (j.kab && !/sumedang/i.test(j.kab)))) }; })
+    .catch(function () { return { nama: [], luar: false }; });
+}
+function deteksiWilayah(lat, lng) {
+  var seq = ++seqWil;
+  var luar = function () { infoWilayah('Titik berada di luar Kab. Sumedang, kecamatan/desa tidak diisi otomatis.', true); };
+  if (!cariDiSumedang(lat, lng)) return luar();
+  infoWilayah('Mencari kecamatan/desa dari titik peta…');
+  namaPhoton(lat, lng).then(function (h1) {
+    if (seq !== seqWil) return;
+    if (h1.luar) return luar();
+    var n1 = h1.nama, m = cocokWil(n1);
+    if (m && m.desa && !m.hanyaDesa) return terapkanWil(m);
+    return namaGoogle(lat, lng).then(function (h2) {
+      if (seq !== seqWil) return;
+      if (h2.luar) return luar();
+      var m2 = cocokWil(n1.concat(h2.nama));
+      terapkanWil(m2 && (!m || m2.skor >= m.skor) ? m2 : m);
+    });
+  });
+}
+function terapkanWil(m) {
+  if (!m) { infoWilayah('Kecamatan/desa tidak terdeteksi dari titik peta, silakan pilih manual.', true); return; }
+  var kec0 = $('kec').value, desa0 = $('desa').value;
+  if (kec0 !== m.kec) { $('kec').value = m.kec; isiDesa(); }
+  if (m.desa) $('desa').value = m.desa;
+  var berubah = kec0 !== $('kec').value || desa0 !== $('desa').value, kosong = !kec0;
+  var teks = !berubah ? '' : (kosong ? 'Kecamatan/desa diisi otomatis dari titik peta.' : 'Kecamatan/desa disesuaikan dengan titik peta.') + ' Ubah bila kurang tepat.';
+  if (!m.desa && !$('desa').value) teks = (berubah ? 'Kecamatan diisi dari titik peta. ' : '') + 'Desa/kelurahan tidak terdeteksi, silakan pilih.';
+  infoWilayah(teks, !m.desa && !$('desa').value);
+  cekUlang('kec'); cekUlang('desa');
 }
 
 $('btnGps').addEventListener('click', function () {
@@ -434,21 +509,21 @@ function pesanKolom(id) {
     case 'email':
       v = $('email').value.trim();
       return !v || /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v) ? '' : 'Format email belum benar. Contoh: nama@email.com. Kosongkan bila tidak ingin menerima email.';
-    case 'kategori': return document.querySelector('input[name=kategori]:checked') ? '' : 'Pilih salah satu jenis pelanggaran.';
+    case 'kategori': return $('kategori').value ? '' : 'Pilih salah satu jenis pelanggaran.';
     case 'uraian':
       v = $('uraian').value.trim().length;
       if (!v) return 'Ceritakan kejadiannya.';
       return v < 10 ? 'Uraian masih kurang ' + (10 - v) + ' karakter lagi (minimal 10).' : '';
     case 'kec': return $('kec').value ? '' : 'Pilih kecamatan.';
-    case 'desa': return $('desa').value ? '' : ($('kec').value ? 'Pilih desa/kelurahan.' : 'Pilih kecamatan dulu, lalu desa/kelurahan.');
+    case 'desa': return $('desa').value || !$('kec').value ? '' : 'Pilih desa/kelurahan.';   // tanpa kecamatan, Desa tersembunyi: cukup pesan di Kecamatan
     case 'alamat': return $('alamat').value.trim().length < 3 ? 'Isi alamat atau patokan lokasi.' : '';
-    case 'peta': return titik ? '' : 'Tandai titik lokasi: ketuk peta atau tekan "Pakai lokasi saya sekarang".';
+    case 'peta': return '';   // titik peta tidak wajib
     case 'setuju': return $('setuju').checked ? '' : 'Centang pernyataan ini untuk mengirim laporan.';
   }
   return '';
 }
 
-var URUTAN = ['nama', 'wa', 'email', 'kategori', 'uraian', 'kec', 'desa', 'alamat', 'peta', 'setuju'];
+var URUTAN = ['nama', 'wa', 'email', 'kategori', 'uraian', 'kec', 'desa', 'alamat', 'setuju'];
 
 // Hapus tanda merah begitu kolom diperbaiki (hanya untuk kolom yang sedang ditandai)
 function cekUlang(id) {
@@ -486,7 +561,7 @@ $('form').addEventListener('submit', function (e) {
     return;
   }
 
-  var kat = document.querySelector('input[name=kategori]:checked');
+  var kat = $('kategori');
   var data = {
     nama: $('nama').value.trim(), wa: $('wa').value.trim(), email: $('email').value.trim(), website: $('website').value,
     kategori: kat ? kat.value : '', uraian: $('uraian').value.trim(), waktuKejadian: $('waktu').value.replace('T', ' '),
